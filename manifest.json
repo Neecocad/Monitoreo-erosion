@@ -1,0 +1,9 @@
+{
+  "name": "Monitoreo de Erosión (Offline)",
+  "short_name": "Erosión Offline",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5e9",
+  "icons": []
+}

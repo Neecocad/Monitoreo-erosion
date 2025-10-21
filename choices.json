@@ -1,0 +1,244 @@
+{
+  "suelo_perdido": [
+    {
+      "code": "1",
+      "label": "20 a <40%"
+    },
+    {
+      "code": "2",
+      "label": "entre 40 a < 60%"
+    },
+    {
+      "code": "3",
+      "label": "Horizonte A se encuentra removido, el % de suelo perdido entre 60 a <80%"
+    },
+    {
+      "code": "4",
+      "label": "Entre 80 y 100%"
+    }
+  ],
+  "cobertura": [
+    {
+      "code": "1",
+      "label": "Cubierta vegetal en más del 70% de la superficie"
+    },
+    {
+      "code": "2",
+      "label": "Cubierta vegetal entre un 30 y 70% de la superficie"
+    },
+    {
+      "code": "3",
+      "label": "La cubierta vegetal ocupa menos de 30% de la superficie"
+    },
+    {
+      "code": "4",
+      "label": "Con cobertura vegetacional menor a 10%"
+    }
+  ],
+  "pedestales": [
+    {
+      "code": "1",
+      "label": "Presencia ocasional, altura 1 a 2 cm."
+    },
+    {
+      "code": "2",
+      "label": "Entre 1 hasta ≤15% de superficie con pedestales"
+    },
+    {
+      "code": "3",
+      "label": "Más del 15% a ≤60% de la superficie con pedestales de altura 5 a 25 cm."
+    },
+    {
+      "code": "4",
+      "label": "Más de 60% de la superficie con pedestales de altura entre 5 y 25 cm."
+    }
+  ],
+  "pavimentos": [
+    {
+      "code": "1",
+      "label": "Presencia de superficie ocasional, (<15%)"
+    },
+    {
+      "code": "2",
+      "label": "De 15 a ≤60% superficie de UH"
+    },
+    {
+      "code": "3",
+      "label": "≥60% y <80% de superficie de la UH afectada por pavimentos"
+    },
+    {
+      "code": "4",
+      "label": "≥80% de superficie de la UH afectada por pavimentos"
+    }
+  ],
+  "costras": [
+    {
+      "code": "1",
+      "label": "Sin presencia"
+    },
+    {
+      "code": "2",
+      "label": "Entre 1 hasta ≤15% de la superficie de la UH"
+    },
+    {
+      "code": "3",
+      "label": "Entre >15 y ≤60% de superficie con costras en UH"
+    },
+    {
+      "code": "4",
+      "label": ">60% de superficie con costras en UH."
+    }
+  ],
+  "pedregosidad": [
+    {
+      "code": "1",
+      "label": "0 a <15% de piedras y 0 a <20% de gravas"
+    },
+    {
+      "code": "2",
+      "label": "15 a <35% de piedras y 20 a <40% de gravas"
+    },
+    {
+      "code": "3",
+      "label": "35 a 50% de piedras y 40 a 85% de gravas"
+    },
+    {
+      "code": "4",
+      "label": ">50% de piedras y >85% de gravas."
+    }
+  ],
+  "surcos": [
+    {
+      "code": "1",
+      "label": "No"
+    },
+    {
+      "code": "2",
+      "label": "Ocasional"
+    },
+    {
+      "code": "3",
+      "label": "Frecuentes, distanciamiento medio entre 10 a 20"
+    },
+    {
+      "code": "4",
+      "label": "Muy frecuentes, distanciamiento medio entre 10"
+    }
+  ],
+  "canaliculos": [
+    {
+      "code": "1",
+      "label": "Sin Presencia"
+    },
+    {
+      "code": "2",
+      "label": "Ocasional"
+    },
+    {
+      "code": "3",
+      "label": "Frecuentes"
+    },
+    {
+      "code": "4",
+      "label": "Muy frecuentes"
+    }
+  ],
+  "textura": [
+    {
+      "code": "arenosa",
+      "label": "arenosa"
+    },
+    {
+      "code": "areno_francosa",
+      "label": "areno francosa"
+    },
+    {
+      "code": "franco_arenosa",
+      "label": "franco arenosa"
+    },
+    {
+      "code": "franco_limosa",
+      "label": "franco limosa"
+    },
+    {
+      "code": "franca",
+      "label": "franca"
+    },
+    {
+      "code": "franco_arcillo_arenosa",
+      "label": "franco arcillo arenosa"
+    },
+    {
+      "code": "franco_arcillo_limosa",
+      "label": "franco arcillo limosa"
+    },
+    {
+      "code": "franco_arcillosa",
+      "label": "franco arcillosa"
+    },
+    {
+      "code": "arcillo_arenosa",
+      "label": "arcillo arenosa"
+    },
+    {
+      "code": "arcillo_limosa",
+      "label": "arcillo limosa"
+    },
+    {
+      "code": "arcillosa",
+      "label": "arcillosa"
+    }
+  ],
+  "exposicion": [
+    {
+      "code": "N",
+      "label": "N"
+    },
+    {
+      "code": "NE",
+      "label": "NE"
+    },
+    {
+      "code": "E",
+      "label": "E"
+    },
+    {
+      "code": "SE",
+      "label": "SE"
+    },
+    {
+      "code": "S",
+      "label": "S"
+    },
+    {
+      "code": "SO",
+      "label": "SO"
+    },
+    {
+      "code": "O",
+      "label": "O"
+    },
+    {
+      "code": "NO",
+      "label": "NO"
+    }
+  ],
+  "pendiente": [
+    {
+      "code": "1",
+      "label": "0–5 % | Plano"
+    },
+    {
+      "code": "2",
+      "label": "5–30 % | Inclinado"
+    },
+    {
+      "code": "3",
+      "label": "30–45 % | Moderadamente escarpado"
+    },
+    {
+      "code": "4",
+      "label": "> 45 % | Escarpado"
+    }
+  ]
+}
