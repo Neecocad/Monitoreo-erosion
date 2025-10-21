@@ -43,16 +43,23 @@
           <input id="camino" name="camino" required>
         </div>
       </div>
-      <div class="row">
-        <div>
-          <label for="tramo">Tramo *</label>
-          <input id="tramo" name="tramo" required>
-        </div>
-        <div>
-          <label for="exposicion">Exposición</label>
-          <select id="exposicion" name="exposicion"></select>
-        </div>
-      </div>
+     <div class="row">
+  <div>
+    <label for="fecha">Fecha *</label>
+    <input id="fecha" name="fecha" type="date" required>
+  </div>
+  <div>
+    <label for="tramo">Tramo *</label>
+    <input id="tramo" name="tramo" required>
+  </div>
+</div>
+
+<div class="row">
+  <div>
+    <label for="exposicion">Exposición</label>
+    <select id="exposicion" name="exposicion"></select>
+  </div>
+</div>
     </fieldset>
 
     <fieldset>
@@ -195,6 +202,17 @@ function claseFrom(iet){
 }
 
 const form = document.getElementById('form');
+  // Prefill hoy (YYYY-MM-DD)
+(function setToday(){
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  const today = `${yyyy}-${mm}-${dd}`;
+  const f = document.getElementById('fecha');
+  if (f && !f.value) f.value = today;
+})();
+
 form.addEventListener('change', () => {
   const iet = ietFrom(form);
   document.getElementById('iet').value   = iet;
@@ -268,6 +286,16 @@ form.addEventListener('submit', async (e)=>{
 
   const iet = ietFrom(form);
   const data = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random())),
+    fecha: form.fecha.value,      // 👈 NUEVO
+    ts: new Date().toISOString(),
+    torre: form.torre.value,
+    camino: form.camino.value,
+    tramo: form.tramo.value,
+    ...
+  };
+
+
     id: (crypto.randomUUID ? crypto.randomUUID() : (Date.now()+'-'+Math.random())),
     ts: new Date().toISOString(),
     torre: form.torre.value,
@@ -303,7 +331,7 @@ async function listRegistros(){
   const all = await getAll();
   if (all.length===0){ list.innerHTML = '<p>No hay registros aún.</p>'; return; }
   list.innerHTML = all.map(r => `<div class="card">
-    <div><strong>${r.torre}</strong> — ${r.camino} / ${r.tramo}</div>
+    <div><strong>${r.torre}</strong> — ${r.camino} / ${r.tramo} — <em>${r.fecha || ''}</em></div>
     <div><small class="mono">${r.ts}</small></div>
     <div>IET: <strong>${r.iet || '-'}</strong> | Clase: <strong>${r.clase || '-'}</strong></div>
     <div>GPS: ${r.ubicacion || '-'}</div>
@@ -312,7 +340,7 @@ async function listRegistros(){
 
 document.getElementById('export').addEventListener('click', async ()=>{
   const all = await getAll();
-  const headers = ["id","ts","torre","camino","tramo","exposicion","textura","pendiente","suelo_perdido","cobertura","pedestales","pavimentos","costras","surcos","canaliculos","ubicacion","iet","clase","foto_name"];
+  const headers = ["id","ts","fecha","torre","camino","tramo","exposicion","textura","pendiente","suelo_perdido","cobertura","pedestales","pavimentos","costras","surcos","canaliculos","ubicacion","iet","clase","foto_name"];
   const rows = [headers.join(',')].concat(all.map(r => headers.map(h => (''+(r[h] ?? '')).replace(/,/g,';')).join(',')));
   const blob = new Blob([rows.join('\n')], {type:'text/csv;charset=utf-8'});
   const url  = URL.createObjectURL(blob);
