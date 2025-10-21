@@ -149,118 +149,125 @@
   </section>
 
 <script>
+// -- Estado online/offline
 const statusEl = document.getElementById('status');
-function setStatus(txt, cls='pill') { statusEl.textContent = txt; statusEl.className = cls; }
+function setStatus(txt, cls='pill'){ statusEl.textContent = txt; statusEl.className = cls; }
 setStatus(navigator.onLine ? 'En línea' : 'Sin conexión', 'pill ' + (navigator.onLine ? 'ok':'warn'));
-window.addEventListener('online', () => setStatus('En línea','pill ok'));
-window.addEventListener('offline', () => setStatus('Sin conexión','pill warn'));
+window.addEventListener('online',  ()=> setStatus('En línea','pill ok'));
+window.addEventListener('offline', ()=> setStatus('Sin conexión','pill warn'));
 
-async function loadChoices() { 
-  const res = await fetch('./choices.json');  // 👈 agrega ./ delante
+// -- Cargar listas (catálogos) desde choices.json
+async function loadChoices(){ 
+  const res = await fetch('./choices.json');   // 👈 importante el ./ 
   return res.json();
 }
-function fillSelect(id, list) {{
+function fillSelect(id, list){
   const sel = document.getElementById(id);
-  sel.innerHTML = '<option value="">— Seleccione —</option>' + list.map(o => `<option value="${{o.code}}">${{o.label}}</option>`).join('');
-}}
+  sel.innerHTML = '<option value="">— Seleccione —</option>' +
+    list.map(o => `<option value="${o.code}">${o.label}</option>`).join('');
+}
 
 let CHOICES = null;
-loadChoices().then(c=>{{
+loadChoices().then(c => {
   CHOICES = c;
-  ['textura','exposicion','pendiente','suelo_perdido','cobertura','pedestales','pavimentos','costras','surcos','canaliculos'].forEach(key=>{{
-    fillSelect(key, CHOICES[key]);
-  }});
-}});
+  ['textura','exposicion','pendiente','suelo_perdido','cobertura','pedestales','pavimentos','costras','surcos','canaliculos']
+    .forEach(key => fillSelect(key, CHOICES[key]));
+});
 
+// -- Cálculo IET (promedio de >0 entre 7 campos)
 const IET_FIELDS = ['suelo_perdido','cobertura','pedestales','pavimentos','costras','surcos','canaliculos'];
-function num(v){{ const n = Number(v); return isNaN(n)?0:n; }}
-function ietFrom(form) {{
+function num(v){ const n = Number(v); return isNaN(n) ? 0 : n; }
+function ietFrom(form){
   let sum=0, cnt=0;
-  for (const k of IET_FIELDS) {{
+  for (const k of IET_FIELDS){
     const v = num(form[k].value);
-    if (v > 0) {{ sum += v; cnt += 1; }}
-  }}
+    if (v > 0){ sum += v; cnt += 1; }
+  }
   if (cnt === 0) return '';
   return Math.round((sum/cnt)*10)/10;
-}}
-function claseFrom(iet) {{
+}
+function claseFrom(iet){
   if (iet==='') return '';
-  if (iet < 1.5) return 'Erosión ligera';
-  if (iet < 2.5) return 'Erosión moderada';
+  if (iet < 1.5)  return 'Erosión ligera';
+  if (iet < 2.5)  return 'Erosión moderada';
   if (iet < 3.25) return 'Erosión severa';
   return 'Erosión muy severa';
-}}
+}
+
 const form = document.getElementById('form');
-form.addEventListener('change', ()=>{{
+form.addEventListener('change', () => {
   const iet = ietFrom(form);
-  document.getElementById('iet').value = iet;
+  document.getElementById('iet').value   = iet;
   document.getElementById('clase').value = claseFrom(iet);
-}});
+});
 
-document.getElementById('btnGPS').addEventListener('click', ()=>{{
-  if (!navigator.geolocation) {{ alert('Geolocalización no disponible'); return; }}
-  navigator.geolocation.getCurrentPosition(pos=>{{
-    const {{latitude, longitude}} = pos.coords;
+// -- GPS
+document.getElementById('btnGPS').addEventListener('click', () => {
+  if (!navigator.geolocation){ alert('Geolocalización no disponible'); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude, longitude } = pos.coords;
     document.getElementById('ubicacion').value = latitude.toFixed(6)+','+longitude.toFixed(6);
-  }}, err=>{{
+  }, err => {
     alert('No se pudo obtener GPS: ' + err.message);
-  }}, {{enableHighAccuracy:true, timeout:15000, maximumAge:0}});
-}});
+  }, { enableHighAccuracy:true, timeout:15000, maximumAge:0 });
+});
 
-// IndexedDB
+// -- IndexedDB (almacenamiento offline)
 let db;
 const DB_NAME = 'erosion-db';
-const STORE = 'registros';
-function openDB(){{
-  return new Promise((resolve,reject)=>{{
+const STORE   = 'registros';
+
+function openDB(){
+  return new Promise((resolve,reject)=>{
     const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = e=>{{ e.target.result.createObjectStore(STORE, {{keyPath:'id'}}); }};
-    req.onsuccess = e=> resolve(e.target.result);
-    req.onerror = e=> reject(e);
-  }});
-}}
-async function initDB(){{ db = await openDB(); listRegistros(); }}
+    req.onupgradeneeded = e => { e.target.result.createObjectStore(STORE, { keyPath:'id' }); };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror   = e => reject(e);
+  });
+}
+async function initDB(){ db = await openDB(); listRegistros(); }
 initDB();
 
-async function saveRegistro(obj){{
-  return new Promise((resolve, reject)=>{{
+async function saveRegistro(obj){
+  return new Promise((resolve,reject)=>{
     const tx = db.transaction([STORE], 'readwrite');
     tx.objectStore(STORE).put(obj);
-    tx.oncomplete = ()=> resolve();
-    tx.onerror = e => reject(e);
-  }});
-}}
-async function getAll(){{
-  return new Promise((resolve,reject)=>{{
+    tx.oncomplete = () => resolve();
+    tx.onerror    = e  => reject(e);
+  });
+}
+async function getAll(){
+  return new Promise((resolve,reject)=>{
     const tx = db.transaction([STORE], 'readonly');
     const req = tx.objectStore(STORE).getAll();
-    req.onsuccess = ()=> resolve(req.result || []);
-    req.onerror = e=> reject(e);
-  }});
-}}
-async function clearAll(){{
-  return new Promise((resolve,reject)=>{{
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror   = e  => reject(e);
+  });
+}
+async function clearAll(){
+  return new Promise((resolve,reject)=>{
     const tx = db.transaction([STORE], 'readwrite');
     tx.objectStore(STORE).clear();
-    tx.oncomplete = ()=> resolve();
-    tx.onerror = e=> reject(e);
-  }});
-}}
+    tx.oncomplete = () => resolve();
+    tx.onerror    = e  => reject(e);
+  });
+}
 
-form.addEventListener('submit', async (e)=>{{
+// -- Guardar registro (con validaciones)
+form.addEventListener('submit', async (e)=>{
   e.preventDefault();
-  if (!form.torre.value || !form.camino.value || !form.tramo.value) {{ alert('Torre, Camino y Tramo son obligatorios'); return; }}
-  if (!form.foto.files[0]) {{ alert('La foto es obligatoria'); return; }}
+  if (!form.torre.value || !form.camino.value || !form.tramo.value){ alert('Torre, Camino y Tramo son obligatorios'); return; }
+  if (!form.foto.files[0]){ alert('La foto es obligatoria'); return; }
 
   const file = form.foto.files[0];
-  const photoBase64 = await new Promise(res=>{{
+  const photoBase64 = await new Promise(res => {
     const reader = new FileReader();
-    reader.onload = ()=> res(reader.result);
+    reader.onload = () => res(reader.result);
     reader.readAsDataURL(file);
-  }});
+  });
 
   const iet = ietFrom(form);
-  const data = {{ 
+  const data = {
     id: (crypto.randomUUID ? crypto.randomUUID() : (Date.now()+'-'+Math.random())),
     ts: new Date().toISOString(),
     torre: form.torre.value,
@@ -281,47 +288,50 @@ form.addEventListener('submit', async (e)=>{{
     clase: claseFrom(iet),
     foto_name: file.name,
     foto_dataurl: photoBase64
-  }};
+  };
   await saveRegistro(data);
   form.reset();
-  document.getElementById('iet').value='';
-  document.getElementById('clase').value='';
+  document.getElementById('iet').value = '';
+  document.getElementById('clase').value = '';
   listRegistros();
   alert('Guardado en el dispositivo.');
-}});
+});
 
-async function listRegistros(){{
+// -- Listado y exportación
+async function listRegistros(){
   const list = document.getElementById('registros');
   const all = await getAll();
-  if (all.length===0){{ list.innerHTML = '<p>No hay registros aún.</p>'; return; }}
-  list.innerHTML = all.map(r=>`<div class="card">
-    <div><strong>${{r.torre}}</strong> — ${{r.camino}} / ${{r.tramo}}</div>
-    <div><small class="mono">${{r.ts}}</small></div>
-    <div>IET: <strong>${{r.iet || '-'}}</strong> | Clase: <strong>${{r.clase || '-'}}</strong></div>
-    <div>GPS: ${{r.ubicacion || '-'}}</div>
+  if (all.length===0){ list.innerHTML = '<p>No hay registros aún.</p>'; return; }
+  list.innerHTML = all.map(r => `<div class="card">
+    <div><strong>${r.torre}</strong> — ${r.camino} / ${r.tramo}</div>
+    <div><small class="mono">${r.ts}</small></div>
+    <div>IET: <strong>${r.iet || '-'}</strong> | Clase: <strong>${r.clase || '-'}</strong></div>
+    <div>GPS: ${r.ubicacion || '-'}</div>
   </div>`).join('');
-}}
+}
 
-document.getElementById('export').addEventListener('click', async ()=>{{
+document.getElementById('export').addEventListener('click', async ()=>{
   const all = await getAll();
   const headers = ["id","ts","torre","camino","tramo","exposicion","textura","pendiente","suelo_perdido","cobertura","pedestales","pavimentos","costras","surcos","canaliculos","ubicacion","iet","clase","foto_name"];
-  const rows = [headers.join(',')].concat(all.map(r=> headers.map(h=> (''+(r[h]??'')).replace(/,/g,';')).join(',')));
-  const blob = new Blob([rows.join('\n')], {{type: 'text/csv;charset=utf-8'}});
-  const url = URL.createObjectURL(blob);
+  const rows = [headers.join(',')].concat(all.map(r => headers.map(h => (''+(r[h] ?? '')).replace(/,/g,';')).join(',')));
+  const blob = new Blob([rows.join('\n')], {type:'text/csv;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = 'registros_erosion.csv'; a.click();
   URL.revokeObjectURL(url);
-}});
+});
 
-document.getElementById('clear').addEventListener('click', async ()=>{{
-  if (confirm('Esto borrará todos los registros guardados localmente. ¿Seguro?')){{
+document.getElementById('clear').addEventListener('click', async ()=>{
+  if (confirm('Esto borrará todos los registros guardados localmente. ¿Seguro?')){
     await clearAll();
     listRegistros();
-  }}
-}});
+  }
+});
 
-if ('serviceWorker' in navigator) {{
-  window.addEventListener('load', ()=> navigator.serviceWorker.register('sw.js'));
-}}
+// -- Registrar service worker (modo offline)
+if ('serviceWorker' in navigator){
+  window.addEventListener('load', ()=> navigator.serviceWorker.register('./sw.js'));
+}
 </script>
+
 </body>
 </html>
