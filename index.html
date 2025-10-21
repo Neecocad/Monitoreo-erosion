@@ -163,9 +163,9 @@ setStatus(navigator.onLine ? 'En línea' : 'Sin conexión', 'pill ' + (navigator
 window.addEventListener('online',  ()=> setStatus('En línea','pill ok'));
 window.addEventListener('offline', ()=> setStatus('Sin conexión','pill warn'));
 
-// -- Cargar listas (catálogos) desde choices.json
+// -- Cargar listas (catálogos) desde choices.json (forzamos versión para romper caché)
 async function loadChoices(){ 
-  const res = await fetch('./choices.json');   // 👈 importante el ./ 
+  const res = await fetch('./choices.json?v=3');
   return res.json();
 }
 function fillSelect(id, list){
@@ -201,8 +201,9 @@ function claseFrom(iet){
   return 'Erosión muy severa';
 }
 
+// -- Form y fecha por defecto
 const form = document.getElementById('form');
-  // Prefill hoy (YYYY-MM-DD)
+// Prefill hoy (YYYY-MM-DD)
 (function setToday(){
   const d = new Date();
   const yyyy = d.getFullYear();
@@ -287,16 +288,7 @@ form.addEventListener('submit', async (e)=>{
   const iet = ietFrom(form);
   const data = {
     id: (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random())),
-    fecha: form.fecha.value,      // 👈 NUEVO
-    ts: new Date().toISOString(),
-    torre: form.torre.value,
-    camino: form.camino.value,
-    tramo: form.tramo.value,
-    ...
-  };
-
-
-    id: (crypto.randomUUID ? crypto.randomUUID() : (Date.now()+'-'+Math.random())),
+    fecha: form.fecha.value,      // NUEVO
     ts: new Date().toISOString(),
     torre: form.torre.value,
     camino: form.camino.value,
@@ -330,7 +322,7 @@ async function listRegistros(){
   const list = document.getElementById('registros');
   const all = await getAll();
   if (all.length===0){ list.innerHTML = '<p>No hay registros aún.</p>'; return; }
-  list.innerHTML = all.map(r => `<div class="card">
+  list.innerHTML = all.map(r=>`<div class="card">
     <div><strong>${r.torre}</strong> — ${r.camino} / ${r.tramo} — <em>${r.fecha || ''}</em></div>
     <div><small class="mono">${r.ts}</small></div>
     <div>IET: <strong>${r.iet || '-'}</strong> | Clase: <strong>${r.clase || '-'}</strong></div>
