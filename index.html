@@ -155,10 +155,10 @@ setStatus(navigator.onLine ? 'En línea' : 'Sin conexión', 'pill ' + (navigator
 window.addEventListener('online', () => setStatus('En línea','pill ok'));
 window.addEventListener('offline', () => setStatus('Sin conexión','pill warn'));
 
-async function loadChoices() {{ 
-  const res = await fetch('choices.json'); 
+async function loadChoices() { 
+  const res = await fetch('./choices.json');  // 👈 agrega ./ delante
   return res.json();
-}}
+}
 function fillSelect(id, list) {{
   const sel = document.getElementById(id);
   sel.innerHTML = '<option value="">— Seleccione —</option>' + list.map(o => `<option value="${{o.code}}">${{o.label}}</option>`).join('');
