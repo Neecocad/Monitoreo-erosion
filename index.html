@@ -370,11 +370,42 @@ async function listRegistros(){
 
 document.getElementById('export').addEventListener('click', async ()=>{
   const all = await getAll();
+
+  // Si no hay registros, avisar
+  if (!all || all.length === 0) {
+    alert('No hay registros guardados en este dispositivo.');
+    return;
+  }
+
+  // Encabezados (ajústalos a tu versión actual)
   const headers = ["id","ts","fecha","torre","camino","tramo","exposicion","textura","pendiente","suelo_perdido","cobertura","pedestales","pavimentos","costras","surcos","canaliculos","utm_e","utm_n","iet","clase"];
-  const rows = [headers.join(',')].concat(all.map(r => headers.map(h => (''+(r[h] ?? '')).replace(/,/g,';')).join(',')));
-  const blob = new Blob([rows.join('\n')], {type:'text/csv;charset=utf-8'});
-  const url  = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'registros_erosion.csv'; a.click();
+
+  // Construir filas (reemplaza comas para no romper CSV)
+  const rows = [headers.join(',')].concat(
+    all.map(r => headers.map(h => {
+      const v = (r[h] ?? '');
+      return (''+v).replace(/,/g,';'); // cambia comas por punto y coma
+    }).join(','))
+  );
+
+  const csv = rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+
+  // Nombre de archivo: fecha-hora local
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const fname = `registros_erosion_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
+
+  // Descarga cross-browser
+  // 1) iOS/Safari muestra vista previa y luego compartir/guardar
+  // 2) Android/Chrome descarga directo a Descargas
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fname;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
 });
 
