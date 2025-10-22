@@ -124,24 +124,22 @@
       </div>
     </fieldset>
 
-    <fieldset>
-      <legend>Ubicación y evidencia</legend>
-      <div class="row">
-        <div>
-          <label for="ubicacion">Coordenadas (lat,lon)</label>
-          <input id="ubicacion" name="ubicacion" placeholder="-33.4,-70.6" readonly>
-        </div>
-        <div>
-          <label>&nbsp;</label>
-          <button type="button" id="btnGPS">Tomar ubicación</button>
-        </div>
-      </div>
-      <div>
-        <label for="foto">Foto (obligatoria) *</label>
-        <input id="foto" name="foto" type="file" accept="image/*" capture="environment" required>
-        <small>En iPhone: autoriza el uso de cámara.</small>
-      </div>
-    </fieldset>
+   <fieldset>
+  <h3>Ubicación</h3>
+
+  <div class="row">
+    <div>
+      <label for="utm_e">UTM Este (m)</label>
+      <input id="utm_e" name="utm_e" placeholder="Ej: 355000" required>
+    </div>
+    <div>
+      <label for="utm_n">UTM Norte (m)</label>
+      <input id="utm_n" name="utm_n" placeholder="Ej: 6295000" required>
+    </div>
+  </div>
+
+  <small>Coordenadas en sistema WGS_1984_UTM_Zone_19S.</small>
+</fieldset>
 
     <div class="actions">
       <button type="submit">Guardar en el dispositivo</button>
@@ -303,6 +301,8 @@ form.addEventListener('submit', async (e)=>{
     costras: form.costras.value,
     surcos: form.surcos.value,
     canaliculos: form.canaliculos.value,
+    utm_e: form.utm_e.value,
+    utm_n: form.utm_n.value,
     ubicacion: form.ubicacion.value,
     iet: iet,
     clase: claseFrom(iet),
