@@ -161,9 +161,9 @@ setStatus(navigator.onLine ? 'En línea' : 'Sin conexión', 'pill ' + (navigator
 window.addEventListener('online',  ()=> setStatus('En línea','pill ok'));
 window.addEventListener('offline', ()=> setStatus('Sin conexión','pill warn'));
 
-// -- Cargar listas (catálogos) desde choices.json (forzamos versión para romper caché)
+// -- Cargar listas desde choices.json
 async function loadChoices(){ 
-  const res = await fetch('./choices.json');
+  const res = await fetch('./choices.json'); // offline: SW lo sirve del caché
   return res.json();
 }
 function fillSelect(id, list){
@@ -179,7 +179,7 @@ loadChoices().then(c => {
     .forEach(key => fillSelect(key, CHOICES[key]));
 });
 
-// -- Cálculo IET (promedio de >0 entre 7 campos)
+// -- Cálculo IET
 const IET_FIELDS = ['suelo_perdido','cobertura','pedestales','pavimentos','costras','surcos','canaliculos'];
 function num(v){ const n = Number(v); return isNaN(n) ? 0 : n; }
 function ietFrom(form){
@@ -201,7 +201,6 @@ function claseFrom(iet){
 
 // -- Form y fecha por defecto
 const form = document.getElementById('form');
-// Prefill hoy (YYYY-MM-DD)
 (function setToday(){
   const d = new Date();
   const yyyy = d.getFullYear();
@@ -218,18 +217,7 @@ form.addEventListener('change', () => {
   document.getElementById('clase').value = claseFrom(iet);
 });
 
-// -- GPS
-document.getElementById('btnGPS').addEventListener('click', () => {
-  if (!navigator.geolocation){ alert('Geolocalización no disponible'); return; }
-  navigator.geolocation.getCurrentPosition(pos => {
-    const { latitude, longitude } = pos.coords;
-    document.getElementById('ubicacion').value = latitude.toFixed(6)+','+longitude.toFixed(6);
-  }, err => {
-    alert('No se pudo obtener GPS: ' + err.message);
-  }, { enableHighAccuracy:true, timeout:15000, maximumAge:0 });
-});
-
-// -- IndexedDB (almacenamiento offline)
+// -- IndexedDB (offline)
 let db;
 const DB_NAME = 'erosion-db';
 const STORE   = 'registros';
@@ -270,11 +258,10 @@ async function clearAll(){
   });
 }
 
-// -- Guardar registro (con validaciones)
+// -- Guardar registro
 form.addEventListener('submit', async (e)=>{
   e.preventDefault();
 
-  // Validaciones mínimas
   if (!form.torre.value || !form.camino.value || !form.tramo.value){
     alert('Torre, Camino y Tramo son obligatorios'); 
     return; 
@@ -285,7 +272,6 @@ form.addEventListener('submit', async (e)=>{
   }
 
   const iet = ietFrom(form);
-
   const data = {
     id: (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random())),
     fecha: form.fecha.value,
@@ -303,50 +289,12 @@ form.addEventListener('submit', async (e)=>{
     costras: form.costras.value,
     surcos: form.surcos.value,
     canaliculos: form.canaliculos.value,
-
-    // 👇 UTM manual
     utm_e: form.utm_e.value,
     utm_n: form.utm_n.value,
-
-    // Cálculos
-    iet: iet,
+    iet,
     clase: claseFrom(iet)
   };
 
-  await saveRegistro(data);
-  form.reset();
-  document.getElementById('iet').value = '';
-  document.getElementById('clase').value = '';
-  listRegistros();
-  alert('Guardado en el dispositivo.');
-});
-
-  const iet = ietFrom(form);
-  const data = {
-    id: (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random())),
-    fecha: form.fecha.value,      // NUEVO
-    ts: new Date().toISOString(),
-    torre: form.torre.value,
-    camino: form.camino.value,
-    tramo: form.tramo.value,
-    exposicion: form.exposicion.value,
-    textura: form.textura.value,
-    pendiente: form.pendiente.value,
-    suelo_perdido: form.suelo_perdido.value,
-    cobertura: form.cobertura.value,
-    pedestales: form.pedestales.value,
-    pavimentos: form.pavimentos.value,
-    costras: form.costras.value,
-    surcos: form.surcos.value,
-    canaliculos: form.canaliculos.value,
-    utm_e: form.utm_e.value,
-    utm_n: form.utm_n.value,
-    ubicacion: form.ubicacion.value,
-    iet: iet,
-    clase: claseFrom(iet),
-    foto_name: file.name,
-    foto_dataurl: photoBase64
-  };
   await saveRegistro(data);
   form.reset();
   document.getElementById('iet').value = '';
@@ -361,51 +309,30 @@ async function listRegistros(){
   const all = await getAll();
   if (all.length===0){ list.innerHTML = '<p>No hay registros aún.</p>'; return; }
   list.innerHTML = all.map(r=>`<div class="card">
-   <div><strong>${r.torre}</strong> — ${r.camino} / ${r.tramo} — <em>${r.fecha || ''}</em></div>
-   <div><small class="mono">${r.ts}</small></div>
-   <div>IET: <strong>${r.iet || '-'}</strong> | Clase: <strong>${r.clase || '-'}</strong></div>
-   <div>UTM: E ${r.utm_e || '-'} / N ${r.utm_n || '-'}</div>
- </div>`).join('');
+    <div><strong>${r.torre}</strong> — ${r.camino} / ${r.tramo} — <em>${r.fecha || ''}</em></div>
+    <div><small class="mono">${r.ts}</small></div>
+    <div>IET: <strong>${r.iet || '-'}</strong> | Clase: <strong>${r.clase || '-'}</strong></div>
+    <div>UTM: E ${r.utm_e || '-'} / N ${r.utm_n || '-'}</div>
+  </div>`).join('');
 }
 
 document.getElementById('export').addEventListener('click', async ()=>{
   const all = await getAll();
+  if (!all || all.length === 0) { alert('No hay registros guardados en este dispositivo.'); return; }
 
-  // Si no hay registros, avisar
-  if (!all || all.length === 0) {
-    alert('No hay registros guardados en este dispositivo.');
-    return;
-  }
-
-  // Encabezados (ajústalos a tu versión actual)
   const headers = ["id","ts","fecha","torre","camino","tramo","exposicion","textura","pendiente","suelo_perdido","cobertura","pedestales","pavimentos","costras","surcos","canaliculos","utm_e","utm_n","iet","clase"];
-
-  // Construir filas (reemplaza comas para no romper CSV)
   const rows = [headers.join(',')].concat(
-    all.map(r => headers.map(h => {
-      const v = (r[h] ?? '');
-      return (''+v).replace(/,/g,';'); // cambia comas por punto y coma
-    }).join(','))
+    all.map(r => headers.map(h => (''+(r[h] ?? '')).replace(/,/g,';')).join(','))
   );
-
   const csv = rows.join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
 
-  // Nombre de archivo: fecha-hora local
-  const now = new Date();
-  const pad = n => String(n).padStart(2,'0');
+  const now = new Date(); const pad = n => String(n).padStart(2,'0');
   const fname = `registros_erosion_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.csv`;
 
-  // Descarga cross-browser
-  // 1) iOS/Safari muestra vista previa y luego compartir/guardar
-  // 2) Android/Chrome descarga directo a Descargas
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fname;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  const a = document.createElement('a'); a.href = url; a.download = fname;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
 });
 
@@ -416,7 +343,7 @@ document.getElementById('clear').addEventListener('click', async ()=>{
   }
 });
 
-// -- Registrar service worker (modo offline)
+// -- Registrar service worker (offline)
 if ('serviceWorker' in navigator){
   window.addEventListener('load', ()=> navigator.serviceWorker.register('./sw.js'));
 }
