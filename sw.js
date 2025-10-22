@@ -1,5 +1,5 @@
 // Sube la versión para forzar recacheo
-const CACHE_NAME = 'erosion-offline-v10';
+const CACHE_NAME = 'erosion-offline-v12';
 
 // Todo lo necesario para funcionar sin señal
 const ASSETS = [
