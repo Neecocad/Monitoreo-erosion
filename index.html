@@ -273,15 +273,53 @@ async function clearAll(){
 // -- Guardar registro (con validaciones)
 form.addEventListener('submit', async (e)=>{
   e.preventDefault();
-  if (!form.torre.value || !form.camino.value || !form.tramo.value){ alert('Torre, Camino y Tramo son obligatorios'); return; }
-  if (!form.foto.files[0]){ alert('La foto es obligatoria'); return; }
 
-  const file = form.foto.files[0];
-  const photoBase64 = await new Promise(res => {
-    const reader = new FileReader();
-    reader.onload = () => res(reader.result);
-    reader.readAsDataURL(file);
-  });
+  // Validaciones mínimas
+  if (!form.torre.value || !form.camino.value || !form.tramo.value){
+    alert('Torre, Camino y Tramo son obligatorios'); 
+    return; 
+  }
+  if (!form.utm_e.value || !form.utm_n.value){
+    alert('Debes ingresar UTM Este y UTM Norte'); 
+    return;
+  }
+
+  const iet = ietFrom(form);
+
+  const data = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random())),
+    fecha: form.fecha.value,
+    ts: new Date().toISOString(),
+    torre: form.torre.value,
+    camino: form.camino.value,
+    tramo: form.tramo.value,
+    exposicion: form.exposicion.value,
+    textura: form.textura.value,
+    pendiente: form.pendiente.value,
+    suelo_perdido: form.suelo_perdido.value,
+    cobertura: form.cobertura.value,
+    pedestales: form.pedestales.value,
+    pavimentos: form.pavimentos.value,
+    costras: form.costras.value,
+    surcos: form.surcos.value,
+    canaliculos: form.canaliculos.value,
+
+    // 👇 UTM manual
+    utm_e: form.utm_e.value,
+    utm_n: form.utm_n.value,
+
+    // Cálculos
+    iet: iet,
+    clase: claseFrom(iet)
+  };
+
+  await saveRegistro(data);
+  form.reset();
+  document.getElementById('iet').value = '';
+  document.getElementById('clase').value = '';
+  listRegistros();
+  alert('Guardado en el dispositivo.');
+});
 
   const iet = ietFrom(form);
   const data = {
@@ -323,16 +361,16 @@ async function listRegistros(){
   const all = await getAll();
   if (all.length===0){ list.innerHTML = '<p>No hay registros aún.</p>'; return; }
   list.innerHTML = all.map(r=>`<div class="card">
-    <div><strong>${r.torre}</strong> — ${r.camino} / ${r.tramo} — <em>${r.fecha || ''}</em></div>
-    <div><small class="mono">${r.ts}</small></div>
-    <div>IET: <strong>${r.iet || '-'}</strong> | Clase: <strong>${r.clase || '-'}</strong></div>
-    <div>GPS: ${r.ubicacion || '-'}</div>
-  </div>`).join('');
+   <div><strong>${r.torre}</strong> — ${r.camino} / ${r.tramo} — <em>${r.fecha || ''}</em></div>
+   <div><small class="mono">${r.ts}</small></div>
+   <div>IET: <strong>${r.iet || '-'}</strong> | Clase: <strong>${r.clase || '-'}</strong></div>
+   <div>UTM: E ${r.utm_e || '-'} / N ${r.utm_n || '-'}</div>
+ </div>`).join('');
 }
 
 document.getElementById('export').addEventListener('click', async ()=>{
   const all = await getAll();
-  const headers = ["id","ts","fecha","torre","camino","tramo","exposicion","textura","pendiente","suelo_perdido","cobertura","pedestales","pavimentos","costras","surcos","canaliculos","ubicacion","iet","clase","foto_name"];
+  const headers = ["id","ts","fecha","torre","camino","tramo","exposicion","textura","pendiente","suelo_perdido","cobertura","pedestales","pavimentos","costras","surcos","canaliculos","utm_e","utm_n","iet","clase"];
   const rows = [headers.join(',')].concat(all.map(r => headers.map(h => (''+(r[h] ?? '')).replace(/,/g,';')).join(',')));
   const blob = new Blob([rows.join('\n')], {type:'text/csv;charset=utf-8'});
   const url  = URL.createObjectURL(blob);
