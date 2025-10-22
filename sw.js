@@ -1,23 +1,23 @@
-// AUMENTA ESTE NOMBRE SI ACTUALIZAS (obliga a recachear)
-const CACHE_NAME = 'erosion-offline-v5';
+// Sube la versión para forzar recacheo
+const CACHE_NAME = 'erosion-offline-v6';
 
-// Archivos que deben quedar disponibles sin señal
+// Todo lo necesario para funcionar sin señal
 const ASSETS = [
-  './',                // importante para GitHub Pages
+  './',                // raíz del sitio en GitHub Pages
   './index.html',
   './choices.json',
   './manifest.json',
   './sw.js'
 ];
 
-// Instala y precachea
+// Instala: precachea
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
   );
 });
 
-// Activa, limpia caches viejos y toma control
+// Activa: elimina caches antiguos y toma control
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -27,20 +27,24 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Estrategia cache-first con fallback a red
+// fetch: cache-first y, MUY IMPORTANTE, ignorar query (?v=...)
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   event.respondWith(
-    caches.match(req).then((cached) => {
+    caches.match(req, { ignoreSearch: true }).then((cached) => {
       if (cached) return cached;
       return fetch(req).then((res) => {
-        // Opcional: cachear on-the-fly si pertenece a nuestro origen
+        // Cachear on-the-fly lo del mismo origen
         const url = new URL(req.url);
         if (url.origin === location.origin) {
           caches.open(CACHE_NAME).then((cache) => cache.put(req, res.clone()));
         }
         return res;
-      }).catch(() => cached); // si falla red, devuelve lo que haya
+      }).catch(() => cached);
+    })
+  );
+});
+
     })
   );
 });
