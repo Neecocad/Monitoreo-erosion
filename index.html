@@ -163,7 +163,7 @@ window.addEventListener('offline', ()=> setStatus('Sin conexión','pill warn'));
 
 // -- Cargar listas (catálogos) desde choices.json (forzamos versión para romper caché)
 async function loadChoices(){ 
-  const res = await fetch('./choices.json?v=5');
+  const res = await fetch('./choices.json');
   return res.json();
 }
 function fillSelect(id, list){
