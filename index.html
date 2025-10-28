@@ -179,7 +179,7 @@ function fillSelect(id, list){
 let CHOICES = null;
 loadChoices().then(c => {
   CHOICES = c;
-  ['textura','exposicion','pendiente','suelo_perdido','cobertura','pedestales','pavimentos','costras','surcos','canaliculos''pedregosidad_superficial'
+  ['textura','exposicion','pendiente','suelo_perdido','cobertura','pedestales','pavimentos','costras','surcos','canaliculos','pedregosidad_superficial'
   ].forEach(key => fillSelect(key, CHOICES[key]));
 });
 
