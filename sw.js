@@ -1,5 +1,5 @@
 // sw.js
-const CACHE_NAME = 'erosion-offline-v14'; // ⬅️ súbelo para forzar update
+const CACHE_NAME = 'erosion-offline-v16'; // ⬅️ súbelo para forzar update
 const STATIC_ASSETS = [
   './',
   './index.html',
