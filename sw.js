@@ -1,50 +1,48 @@
-// Sube la versión para forzar recacheo
-const CACHE_NAME = 'erosion-offline-v12';
-
-// Todo lo necesario para funcionar sin señal
-const ASSETS = [
-  './',                // raíz del sitio en GitHub Pages
+// sw.js
+const CACHE_NAME = 'erosion-offline-v14'; // ⬅️ súbelo para forzar update
+const STATIC_ASSETS = [
+  './',
   './index.html',
-  './choices.json',
-  './manifest.json',
+  './choices.json',   // ⬅️ importante para que se cachee
   './sw.js'
+  // agrega otros archivos si corresponde (css, icons, etc.)
 ];
 
-// Instala: precachea
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
   );
 });
 
-// Activa: elimina caches antiguos y toma control
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
     )
   );
-  self.clients.claim();
 });
 
-// fetch: cache-first y, MUY IMPORTANTE, ignorar query (?v=...)
+// Cache-first con actualización en segundo plano para GET
 self.addEventListener('fetch', (event) => {
   const req = event.request;
+  if (req.method !== 'GET') return; // no manejar POST/otros
+
   event.respondWith(
     caches.match(req, { ignoreSearch: true }).then((cached) => {
-      if (cached) return cached;
-      return fetch(req).then((res) => {
-        // Cachear on-the-fly lo del mismo origen
-        const url = new URL(req.url);
-        if (url.origin === location.origin) {
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, res.clone()));
+      const fetchPromise = fetch(req).then((res) => {
+        // Sólo cachea respuestas OK y mismo origen
+        if (res && res.ok && new URL(req.url).origin === location.origin) {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
         }
         return res;
-      }).catch(() => cached);
-    })
-  );
-});
+      }).catch(() => {
+        // Si falla la red, entrega el cache si existe
+        return cached;
+      });
 
+      // Respuesta inmediata del cache, y si no hay, de la red
+      return cached || fetchPromise;
     })
   );
 });
