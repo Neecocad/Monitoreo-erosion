@@ -73,6 +73,10 @@
           <label for="pendiente">Pendiente (%)</label>
           <select id="pendiente" name="pendiente"></select>
         </div>
+        <div>
+          <label for="pedregosidad_superficial">Pedregosidad superficial</label>
+          <select id="pedregosidad_superficial" name="pedregosidad_superficial"></select>
+        </div>
       </div>
     </fieldset>
 
@@ -175,8 +179,8 @@ function fillSelect(id, list){
 let CHOICES = null;
 loadChoices().then(c => {
   CHOICES = c;
-  ['textura','exposicion','pendiente','suelo_perdido','cobertura','pedestales','pavimentos','costras','surcos','canaliculos']
-    .forEach(key => fillSelect(key, CHOICES[key]));
+  ['textura','exposicion','pendiente','suelo_perdido','cobertura','pedestales','pavimentos','costras','surcos','canaliculos''pedregosidad_superficial'
+  ].forEach(key => fillSelect(key, CHOICES[key]));
 });
 
 // -- Cálculo IET
@@ -282,6 +286,7 @@ form.addEventListener('submit', async (e)=>{
     exposicion: form.exposicion.value,
     textura: form.textura.value,
     pendiente: form.pendiente.value,
+    pedregosidad_superficial: form.pedregosidad_superficial.value,
     suelo_perdido: form.suelo_perdido.value,
     cobertura: form.cobertura.value,
     pedestales: form.pedestales.value,
@@ -312,6 +317,7 @@ async function listRegistros(){
     <div><strong>${r.torre}</strong> — ${r.camino} / ${r.tramo} — <em>${r.fecha || ''}</em></div>
     <div><small class="mono">${r.ts}</small></div>
     <div>IET: <strong>${r.iet || '-'}</strong> | Clase: <strong>${r.clase || '-'}</strong></div>
+    <div>Pedregosidad: <strong>${r.pedregosidad_superficial || '-'}</strong></div> <!-- ← nueva línea -->
     <div>UTM: E ${r.utm_e || '-'} / N ${r.utm_n || '-'}</div>
   </div>`).join('');
 }
@@ -320,7 +326,7 @@ document.getElementById('export').addEventListener('click', async ()=>{
   const all = await getAll();
   if (!all || all.length === 0) { alert('No hay registros guardados en este dispositivo.'); return; }
 
-  const headers = ["id","ts","fecha","torre","camino","tramo","exposicion","textura","pendiente","suelo_perdido","cobertura","pedestales","pavimentos","costras","surcos","canaliculos","utm_e","utm_n","iet","clase"];
+  const headers = ["id","ts","fecha","torre","camino","tramo","exposicion","textura","pendiente","pedregosidad_superficial","suelo_perdido","cobertura","pedestales","pavimentos","costras","surcos","canaliculos","utm_e","utm_n","iet","clase"];
   const rows = [headers.join(',')].concat(
     all.map(r => headers.map(h => (''+(r[h] ?? '')).replace(/,/g,';')).join(','))
   );
