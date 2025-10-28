@@ -89,7 +89,7 @@
       "label": ">60% de superficie con costras en UH."
     }
   ],
-  "pedregosidad": [
+  "pedregosidad_superficial": [
     {
       "code": "1",
       "label": "0 a <15% de piedras y 0 a <20% de gravas"
